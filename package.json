@@ -4,8 +4,7 @@
   "description": "blog made using react",
   "main": "main.js",
   "scripts": {
-    "test": "mocha test/test.js",
-    "start": "node server.js"
+    "test": "mocha test/test.js"
   },
   "repository": {
     "type": "git",
