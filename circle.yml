@@ -1,0 +1,20 @@
+## Customize the test machine
+machine:
+
+  timezone:
+    America/Los_Angeles # Set the timezone
+
+  # Add some environment variables
+  environment:
+    CIRCLE_ENV: test
+
+## Customize dependencies
+dependencies:
+  pre:
+    - npm install mocha # install from a different package manager
+
+## Custom notifications
+notify:
+  webhooks:
+    # A list of hashes representing hooks. Only the url field is supported.
+    - url: http://4e7e5833.ngrok.io/hooks/circleci
