@@ -4,4 +4,4 @@ node_js:
 before_script:
 - npm install -g mocha
 notifications:
-  webhooks: http://4e7e5833.ngrok.io/hooks/circleci
+  webhooks: http://4e7e5833.ngrok.io/hooks/travisci
