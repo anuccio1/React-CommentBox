@@ -15,17 +15,5 @@
   "bugs": {
     "url": "https://github.com/anuccio1/React-CommentBox/issues"
   },
-  "homepage": "https://github.com/anuccio1/React-CommentBox#readme",
-  "dependencies": {
-    "body-parser": "^1.15.0",
-    "mocha": "^3.3.0"
-  },
-  "devDependencies": {
-    "babel-preset-react": "^6.5.0",
-    "babelify": "^7.2.0",
-    "browserify": "^13.0.0",
-    "gulp": "^3.9.1",
-    "node-inspector": "^0.12.7",
-    "vinyl-source-stream": "^1.1.0"
-  }
+  "homepage": "https://github.com/anuccio1/React-CommentBox#readme"
 }
