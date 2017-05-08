@@ -14,7 +14,7 @@ dependencies:
     - npm install mocha # install from a different package manager
 
 test:
-  pre:
+  override:
     - cd fossa-test && npm i && node index.js
 
 
