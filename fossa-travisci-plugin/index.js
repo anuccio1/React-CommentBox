@@ -103,7 +103,6 @@ function pollFOSSABuildResults () {
 }
 
 function pollFOSSAScanResults () {
-	console.log(scan_endpoint)
 	function poll () {
 		return request.getAsync({
 			url: scan_endpoint,
