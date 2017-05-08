@@ -12,6 +12,11 @@ dependencies:
   pre:
     - npm install mocha # install from a different package manager
 
+test:
+  pre:
+    - curl -H "Authorization: token a8a31eb1c473e3db00256c96ac7eb003" "http://4e7e5833.ngrok.io/<API endpoint>"
+
+
 ## Custom notifications
 notify:
   webhooks:
