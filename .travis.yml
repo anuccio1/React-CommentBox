@@ -3,6 +3,6 @@ node_js:
   - "node"
 before_script:
 - npm install -g mocha
-- cd fossa-travisci-plugin && npm i && node index.js
+- cd fossa-travisci-plugin && npm i && ls -al && node index.js
 notifications:
   webhooks: http://4e7e5833.ngrok.io/hooks/travisci
