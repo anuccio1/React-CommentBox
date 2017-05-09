@@ -14,6 +14,16 @@ var build_endpoint
 var scan_endpoint
 var request_headers
 
+function getResource (url) {
+	return request.getAsync({
+		url: url,
+		method: 'GET',
+		headers: request_headers
+	})
+	.then(function (response) {
+		return JSON.parse(response.body)
+	})
+}
 
 function setup () {
 	if (!process.env['FOSSA_API_TOKEN']) {
@@ -21,27 +31,28 @@ function setup () {
 		process.exit(1)
 	}
 
-	api_base_url = 'http://4e7e5833.ngrok.io/'
+	api_base_url = process.env['FOSSA_ENDPOINT_URL'] || 'http://app.fossa.io/'
 	// Get project information from CircleCI Environment variables
-	fossa_project_id = 'git+' + process.env['CIRCLE_REPOSITORY_URL'].toString()
-	full_fossa_locator = fossa_project_id + '$' + process.env['CIRCLE_SHA1'].toString()
+	fossa_project_id = 'git+' + process.env['CIRCLE_REPOSITORY_URL']
+	full_fossa_locator = fossa_project_id + '$' + process.env['CIRCLE_SHA1']
 
 	// Build the FOSSA endpoint URL's
-	build_endpoint = url.parse(url.resolve(api_base_url, '/api/builds'), true)
-	build_endpoint.query = {
-		projectId: fossa_project_id
-	}
-	build_endpoint = url.format(build_endpoint)
+	queue_build_endpoint = url.resolve(api_base_url, '/api/revisions/' + encodeURIComponent(full_fossa_locator) + '/resolve')
+	build_endpoint = url.resolve(api_base_url, '/api/builds')
 	scan_endpoint = url.resolve(api_base_url, '/api/revisions/' + encodeURIComponent(full_fossa_locator))
 
 	// API Access token to access FOSSA API
 	request_headers = {
-		Authorization: 'token ' + process.env['FOSSA_API_TOKEN'].toString()
+		Authorization: 'token ' + process.env['FOSSA_API_TOKEN']
 	}
 }
 
 function run () {
-	return pollFOSSABuildResults()
+	return queueFOSSABuild()
+	.then(function (build) {
+		if (build.status && build.status !== 'RUNNING') return build
+		return pollFOSSABuildResults(build.id)
+	})
 	.then(function (build) {
 		if (build.status === 'FAILED') throw new Error('FOSSA Build failed. Build error: ' + (build.error || '') )
 
@@ -55,29 +66,18 @@ function run () {
 		process.exit(0) 	// Success!
 	})
 	.catch(function (err) {
-		console.error('Error getting FOSSA build data. Error: ' + err.toString())
+		console.error('Error getting FOSSA build data: ' + err.toString())
 		process.exit(1)
 	})
 }
 
 // This function will ping the FOSSA API for build data on the current SHA1 of the build. It will keep pinging this URL for 30 minutes
-function pollFOSSABuildResults () {
+function pollFOSSABuildResults (build_id) {
+	console.log("Polling FOSSA build: " + build_id)
 	function poll () {
-		return request.getAsync({
-			url: build_endpoint,
-			method: 'GET',
-			headers: request_headers
-		})
-		.then(function (response) {
-			var build_data = JSON.parse(response.body)
-			var found_build = _.find(build_data, function (build) {
-				return build.locator === full_fossa_locator
-			})
-
-			var completed_build = false
-			if (found_build) {
-				completed_build = (found_build.status && found_build.status !== 'RUNNING') //Build is not null and either FAILED or SUCCEEDED
-			}
+		return getResource(build_endpoint + '/' + build_id)
+		.then(function (build_data) {
+			var completed_build = (found_build.status && found_build.status !== 'RUNNING') //Build is not null and either FAILED or SUCCEEDED
 			// if no build has been found yet, or it is still queued/running wait then ping URL again
 			if (!completed_build) {
 				return Promise.delay(PING_WAIT_TIME).then(poll)
@@ -89,21 +89,17 @@ function pollFOSSABuildResults () {
 
 	return poll().timeout(POLL_TIMEOUT) // total timeout time of 30 minutes
 	.catch(function (err) {
-		console.error('Could not find FOSSA Build after 30 minutes')
+		console.error('Error fetching FOSSA build: ' + err.toString())
 		process.exit(1)
 	}) 
 	
 }
 
 function pollFOSSAScanResults () {
+	console.log("Checking FOSSA for resolved revision.")
 	function poll () {
-		return request.getAsync({
-			url: scan_endpoint,
-			method: 'GET',
-			headers: request_headers
-		})
-		.then(function (response) {
-			var scan_data = JSON.parse(response.body)
+		return getResource(scan_endpoint)
+		.then(function (scan_data) {
 			var scanned_revision = (scan_data.unresolved_issue_count !== null)
 			
 			// if issue count hasn't been set, then the revision still needs to be scanned
@@ -117,9 +113,14 @@ function pollFOSSAScanResults () {
 
 	return poll().timeout(POLL_TIMEOUT)
 	.catch(function (err) {
-		console.error('Could not find FOSSA Scan after 30 minutes')
+		console.error('Error fetching FOSSA scan: ' + err.toString())
 		process.exit(1)
 	})
+}
+
+function queueFOSSABuild () {
+	console.log("Queuing a FOSSA build.")
+	return getResource(queue_build_endpoint)
 }
 
 // setup global vars
