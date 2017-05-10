@@ -81,13 +81,13 @@ function pollFOSSABuildResults (build_id) {
 	function poll () {
 		return getResource(build_endpoint + '/' + build_id)
 		.then(function (build_data) {
-			var completed_build = (found_build.status && found_build.status !== 'RUNNING') //Build is not null and either FAILED or SUCCEEDED
+			var completed_build = (build_data.status && build_data.status !== 'RUNNING') //Build is not null and either FAILED or SUCCEEDED
 			// if no build has been found yet, or it is still queued/running wait then ping URL again
 			if (!completed_build) {
 				return Promise.delay(PING_WAIT_TIME).then(poll)
 			}
 
-			return found_build
+			return build_data
 		})
 	}
 
