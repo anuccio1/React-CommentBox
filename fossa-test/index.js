@@ -37,7 +37,7 @@ function setup () {
 	full_fossa_locator = fossa_project_id + '$' + process.env['CIRCLE_SHA1']
 
 	// Build the FOSSA endpoint URL's
-	queue_build_endpoint = url.resolve(api_base_url, '/api/revisions/' + encodeURIComponent(full_fossa_locator) + '/resolve')
+	queue_build_endpoint = url.resolve(api_base_url, '/api/revisions/build')
 	build_endpoint = url.resolve(api_base_url, '/api/builds')
 	scan_endpoint = url.resolve(api_base_url, '/api/revisions/' + encodeURIComponent(full_fossa_locator))
 
@@ -50,6 +50,10 @@ function setup () {
 function run () {
 	return queueFOSSABuild()
 	.then(function (build) {
+		if (!build.id) {
+			console.error('Build queue failed')
+			process.exit(1)
+		}
 		if (build.status && build.status !== 'RUNNING') return build
 		return pollFOSSABuildResults(build.id)
 	})
@@ -120,7 +124,17 @@ function pollFOSSAScanResults () {
 
 function queueFOSSABuild () {
 	console.log("Queuing a FOSSA build.")
-	return getResource(queue_build_endpoint)
+	return request.postAsync({
+		url: queue_build_endpoint,
+		method: 'POST',
+		headers: request_headers,
+		json: {
+			locator: full_fossa_locator
+		}
+	})
+	.then(function (response) {
+		return response.body
+	})
 }
 
 // setup global vars
