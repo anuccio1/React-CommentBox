@@ -18,8 +18,8 @@ test:
     - cd fossa-test && npm i && node index.js
 
 
-## Custom notifications
-notify:
-  webhooks:
-    # A list of hashes representing hooks. Only the url field is supported.
-    - url: http://4e7e5833.ngrok.io/hooks/circleci
+# ## Custom notifications
+# notify:
+#   webhooks:
+#     # A list of hashes representing hooks. Only the url field is supported.
+#     - url: http://4e7e5833.ngrok.io/hooks/circleci
