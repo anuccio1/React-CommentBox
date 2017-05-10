@@ -50,6 +50,7 @@ function setup () {
 function run () {
 	return queueFOSSABuild()
 	.then(function (build) {
+		console.log(build)
 		if (!build.id) {
 			console.error('Build queue failed')
 			process.exit(1)
@@ -130,6 +131,7 @@ function queueFOSSABuild () {
 		headers: request_headers
 	})
 	.then(function (response) {
+		console.log(response.body)
 		return response.body
 	})
 }
